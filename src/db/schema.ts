@@ -18,31 +18,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
-export const usersRelations = relations(users, ({ many }) => ({
-  presets: many(presets),
-}))
-
 export const presets = pgTable("presets", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
-  description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
 })
-
-export const presetsRelations = relations(presets, ({ one, many }) => ({
-  user: one(users, {
-    fields: [presets.userId],
-    references: [users.id],
-  }),
-  oscillators: many(oscillators),
-  tags: many(presetsToTags),
-}))
 
 export const waveformEnum = pgEnum("waveform", [
   "sine",
@@ -72,22 +58,11 @@ export const oscillators = pgTable("oscillators", {
   filterRelease: real("filter_release").notNull(),
 })
 
-export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
-  preset: one(presets, {
-    fields: [oscillators.presetId],
-    references: [presets.id],
-  }),
-}))
-
 export const tags = pgTable("tags", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   name: varchar("name", { length: 50 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
-
-export const tagsRelations = relations(tags, ({ many }) => ({
-  presets: many(presetsToTags),
-}))
 
 export const presetsToTags = pgTable(
   "presets_to_tags",
@@ -102,6 +77,30 @@ export const presetsToTags = pgTable(
   },
   (table) => [primaryKey({ columns: [table.presetId, table.tagId] })]
 )
+
+export const usersRelations = relations(users, ({ many }) => ({
+  presets: many(presets),
+}))
+
+export const presetsRelations = relations(presets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [presets.userId],
+    references: [users.id],
+  }),
+  oscillators: many(oscillators),
+  tags: many(presetsToTags),
+}))
+
+export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
+  preset: one(presets, {
+    fields: [oscillators.presetId],
+    references: [presets.id],
+  }),
+}))
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  presets: many(presetsToTags),
+}))
 
 export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
   preset: one(presets, {
