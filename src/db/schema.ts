@@ -6,10 +6,10 @@ import {
   smallint,
   timestamp,
   integer,
-  primaryKey,
   pgEnum,
+  primaryKey,
 } from "drizzle-orm/pg-core"
-import { relations } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -81,35 +81,26 @@ export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
 
 export const tags = pgTable("tags", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 50 }).notNull(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
-export const tagsRelations = relations(tags, ({ one, many }) => ({
-  user: one(users, {
-    fields: [tags.userId],
-    references: [users.id],
-  }),
+export const tagsRelations = relations(tags, ({ many }) => ({
   presets: many(presetsToTags),
 }))
 
 export const presetsToTags = pgTable(
   "presets_to_tags",
   {
-    presetId: integer("preset_id")
+    presetId: integer()
       .notNull()
       .references(() => presets.id, { onDelete: "cascade" }),
 
-    tagId: integer("tag_id")
+    tagId: integer()
       .notNull()
       .references(() => tags.id, { onDelete: "cascade" }),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.presetId, table.tagId] }),
-  })
+  (table) => [primaryKey({ columns: [table.presetId, table.tagId] })]
 )
 
 export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
