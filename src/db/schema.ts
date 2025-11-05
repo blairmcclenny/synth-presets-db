@@ -6,6 +6,7 @@ import {
   smallint,
   timestamp,
   integer,
+  pgEnum,
   primaryKey,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
@@ -13,8 +14,8 @@ import { relations } from "drizzle-orm"
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  displayName: varchar("display_name", { length: 100 }).notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  userName: varchar("user_name", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -28,8 +29,8 @@ export const presets = pgTable("presets", {
     .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { mode: "date" })
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
 })
@@ -43,6 +44,13 @@ export const presetsRelations = relations(presets, ({ one, many }) => ({
   tags: many(presetsToTags),
 }))
 
+export const waveformEnum = pgEnum("waveform", [
+  "sine",
+  "square",
+  "sawtooth",
+  "triangle",
+])
+
 export const oscillators = pgTable("oscillators", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   presetId: integer("preset_id")
@@ -53,9 +61,7 @@ export const oscillators = pgTable("oscillators", {
   pan: real("pan").notNull(),
   octave: smallint("octave").notNull(),
   tune: smallint("tune").notNull(),
-  waveform: text("waveform", {
-    enum: ["sine", "square", "sawtooth", "triangle"],
-  }).notNull(),
+  waveform: waveformEnum().notNull(),
   ampAttack: real("amp_attack").notNull(),
   ampDecay: real("amp_decay").notNull(),
   ampSustain: real("amp_sustain").notNull(),
@@ -75,35 +81,26 @@ export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
 
 export const tags = pgTable("tags", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 50 }).notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
-export const tagsRelations = relations(tags, ({ one, many }) => ({
-  user: one(users, {
-    fields: [tags.userId],
-    references: [users.id],
-  }),
+export const tagsRelations = relations(tags, ({ many }) => ({
   presets: many(presetsToTags),
 }))
 
 export const presetsToTags = pgTable(
   "presets_to_tags",
   {
-    presetId: integer("preset_id")
+    presetId: integer()
       .notNull()
       .references(() => presets.id, { onDelete: "cascade" }),
 
-    tagId: integer("tag_id")
+    tagId: integer()
       .notNull()
       .references(() => tags.id, { onDelete: "cascade" }),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.presetId, table.tagId] }),
-  })
+  (table) => [primaryKey({ columns: [table.presetId, table.tagId] })]
 )
 
 export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
