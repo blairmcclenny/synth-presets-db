@@ -1,7 +1,6 @@
 import {
   pgTable,
   varchar,
-  text,
   real,
   smallint,
   timestamp,
@@ -10,6 +9,9 @@ import {
   primaryKey,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
+import { createInsertSchema, createSelectSchema } from "drizzle-zod"
+
+// TABLES
 
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -18,31 +20,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
-export const usersRelations = relations(users, ({ many }) => ({
-  presets: many(presets),
-}))
-
 export const presets = pgTable("presets", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
-  description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
 })
-
-export const presetsRelations = relations(presets, ({ one, many }) => ({
-  user: one(users, {
-    fields: [presets.userId],
-    references: [users.id],
-  }),
-  oscillators: many(oscillators),
-  tags: many(presetsToTags),
-}))
 
 export const waveformEnum = pgEnum("waveform", [
   "sine",
@@ -72,22 +60,11 @@ export const oscillators = pgTable("oscillators", {
   filterRelease: real("filter_release").notNull(),
 })
 
-export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
-  preset: one(presets, {
-    fields: [oscillators.presetId],
-    references: [presets.id],
-  }),
-}))
-
 export const tags = pgTable("tags", {
   id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   name: varchar("name", { length: 50 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
-
-export const tagsRelations = relations(tags, ({ many }) => ({
-  presets: many(presetsToTags),
-}))
 
 export const presetsToTags = pgTable(
   "presets_to_tags",
@@ -103,6 +80,32 @@ export const presetsToTags = pgTable(
   (table) => [primaryKey({ columns: [table.presetId, table.tagId] })]
 )
 
+// RELATIONS
+
+export const usersRelations = relations(users, ({ many }) => ({
+  presets: many(presets),
+}))
+
+export const presetsRelations = relations(presets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [presets.userId],
+    references: [users.id],
+  }),
+  oscillators: many(oscillators),
+  tags: many(presetsToTags),
+}))
+
+export const oscillatorsRelations = relations(oscillators, ({ one }) => ({
+  preset: one(presets, {
+    fields: [oscillators.presetId],
+    references: [presets.id],
+  }),
+}))
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  presets: many(presetsToTags),
+}))
+
 export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
   preset: one(presets, {
     fields: [presetsToTags.presetId],
@@ -113,3 +116,35 @@ export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
     references: [tags.id],
   }),
 }))
+
+// TYPES
+
+export const insertUserSchema = createInsertSchema(users)
+export const selectUserSchema = createSelectSchema(users)
+
+export const insertPresetSchema = createInsertSchema(presets)
+export const selectPresetSchema = createSelectSchema(presets)
+
+export const insertOscillatorSchema = createInsertSchema(oscillators)
+export const selectOscillatorSchema = createSelectSchema(oscillators)
+
+export const insertTagSchema = createInsertSchema(tags)
+export const selectTagSchema = createSelectSchema(tags)
+
+export const insertPrestToTagSchema = createInsertSchema(presetsToTags)
+export const selectPresetToTagSchema = createSelectSchema(presetsToTags)
+
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
+
+export type Preset = typeof presets.$inferSelect
+export type NewPreset = typeof presets.$inferInsert
+
+export type Oscillator = typeof oscillators.$inferSelect
+export type NewOscillator = typeof oscillators.$inferInsert
+
+export type Tag = typeof tags.$inferSelect
+export type NewTag = typeof tags.$inferInsert
+
+export type PresetToTag = typeof presetsToTags.$inferSelect
+export type NewPresetToTag = typeof presetsToTags.$inferInsert
