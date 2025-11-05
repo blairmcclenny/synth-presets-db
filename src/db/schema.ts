@@ -9,6 +9,9 @@ import {
   primaryKey,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
+import { createInsertSchema, createSelectSchema } from "drizzle-zod"
+
+// TABLES
 
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -77,6 +80,8 @@ export const presetsToTags = pgTable(
   (table) => [primaryKey({ columns: [table.presetId, table.tagId] })]
 )
 
+// RELATIONS
+
 export const usersRelations = relations(users, ({ many }) => ({
   presets: many(presets),
 }))
@@ -111,3 +116,11 @@ export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
     references: [tags.id],
   }),
 }))
+
+// TYPES
+
+export const insertUserSchema = createInsertSchema(users)
+export const selectUserSchema = createSelectSchema(users)
+
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
