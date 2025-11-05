@@ -122,5 +122,29 @@ export const presetsToTagsRelations = relations(presetsToTags, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users)
 export const selectUserSchema = createSelectSchema(users)
 
+export const insertPresetSchema = createInsertSchema(presets)
+export const selectPresetSchema = createSelectSchema(presets)
+
+export const insertOscillatorSchema = createInsertSchema(oscillators)
+export const selectOscillatorSchema = createSelectSchema(oscillators)
+
+export const insertTagSchema = createInsertSchema(tags)
+export const selectTagSchema = createSelectSchema(tags)
+
+export const insertPrestToTagSchema = createInsertSchema(presetsToTags)
+export const selectPresetToTagSchema = createSelectSchema(presetsToTags)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
+
+export type Preset = typeof presets.$inferSelect
+export type NewPreset = typeof presets.$inferInsert
+
+export type Oscillator = typeof oscillators.$inferSelect
+export type NewOscillator = typeof oscillators.$inferInsert
+
+export type Tag = typeof tags.$inferSelect
+export type NewTag = typeof tags.$inferInsert
+
+export type PresetToTag = typeof presetsToTags.$inferSelect
+export type NewPresetToTag = typeof presetsToTags.$inferInsert
