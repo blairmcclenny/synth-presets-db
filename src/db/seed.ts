@@ -1,12 +1,10 @@
 import db from "./connection"
 import {
-  NewOscillator,
   oscillators as oscillatorsTable,
   presets as presetsTable,
   presetsToTags as presetsToTagsTable,
   tags as tagsTable,
   users as usersTable,
-  waveformEnum,
 } from "./schema"
 
 export async function seed() {
