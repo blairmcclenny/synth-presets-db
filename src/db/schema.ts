@@ -16,7 +16,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 export const users = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  userName: varchar("user_name", { length: 100 }).notNull(),
+  username: varchar("user_name", { length: 100 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
