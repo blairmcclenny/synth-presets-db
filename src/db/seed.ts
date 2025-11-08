@@ -80,7 +80,7 @@ export async function seed() {
       ])
       .returning()
 
-    console.log("Create oscillators...")
+    console.log("Creating oscillators...")
 
     await db
       .insert(oscillatorsTable)
@@ -137,7 +137,22 @@ export async function seed() {
 
     console.log("Creating tags...")
 
-    const tags = await db
+    const [
+      arp,
+      bass,
+      lead,
+      pad,
+      pluck,
+      keys,
+      aggressive,
+      dreamy,
+      dark,
+      bright,
+      evolving,
+      analog,
+      simple,
+      complex,
+    ] = await db
       .insert(tagsTable)
       .values(
         [
@@ -161,16 +176,94 @@ export async function seed() {
       )
       .returning()
 
-    // Dreamy Analog Arp — “Cloud Conveyor”
-    // Aggressive Bass — “Subwoofer Karate”
-    // Bright Lead — “Laser Fruit Snack”
-    // Dark Pad — “Graveyard Fog Machine”
-    // Complex Keys — “Quantum Coffee Shop”
-    // Simple Pluck — “Tiny Disco Pebble”
-    // Evolving Pad — “Slow-Motion Nebula”
-    // Analog Bass — “Vintage Thunderpants”
-    // Dreamy Keys — “Pastel Stardust”
-    // Aggressive Lead — “Chainsaw Compliment”
+    console.log("Creating presets to tags...")
+
+    await db.insert(presetsToTagsTable).values([
+      {
+        presetId: cloudConveyor.id,
+        tagId: dreamy.id,
+      },
+      {
+        presetId: cloudConveyor.id,
+        tagId: analog.id,
+      },
+      {
+        presetId: cloudConveyor.id,
+        tagId: arp.id,
+      },
+      {
+        presetId: subwooferKarate.id,
+        tagId: aggressive.id,
+      },
+      {
+        presetId: subwooferKarate.id,
+        tagId: bass.id,
+      },
+      {
+        presetId: laserFruitSnack.id,
+        tagId: bright.id,
+      },
+      {
+        presetId: laserFruitSnack.id,
+        tagId: lead.id,
+      },
+      {
+        presetId: graveyardFogMachine.id,
+        tagId: dark.id,
+      },
+      {
+        presetId: graveyardFogMachine.id,
+        tagId: pad.id,
+      },
+      {
+        presetId: quantumCoffeeShop.id,
+        tagId: complex.id,
+      },
+      {
+        presetId: quantumCoffeeShop.id,
+        tagId: keys.id,
+      },
+      {
+        presetId: tinyDiscoPebble.id,
+        tagId: simple.id,
+      },
+      {
+        presetId: tinyDiscoPebble.id,
+        tagId: pluck.id,
+      },
+      {
+        presetId: slowMotionNebula.id,
+        tagId: evolving.id,
+      },
+      {
+        presetId: slowMotionNebula.id,
+        tagId: pad.id,
+      },
+      {
+        presetId: vintageThunderpants.id,
+        tagId: analog.id,
+      },
+      {
+        presetId: vintageThunderpants.id,
+        tagId: bass.id,
+      },
+      {
+        presetId: pastelStardust.id,
+        tagId: dreamy.id,
+      },
+      {
+        presetId: pastelStardust.id,
+        tagId: keys.id,
+      },
+      {
+        presetId: chainsawCompliment.id,
+        tagId: aggressive.id,
+      },
+      {
+        presetId: chainsawCompliment.id,
+        tagId: lead.id,
+      },
+    ])
   } catch (error) {
     console.error(error)
   }
