@@ -1,11 +1,5 @@
 import db from "./connection"
-import {
-  oscillators as oscillatorsTable,
-  presets as presetsTable,
-  presetsToTags as presetsToTagsTable,
-  tags as tagsTable,
-  users as usersTable,
-} from "./schema"
+import { users, presets, oscillators, tags, presetsToTags } from "./schema"
 
 export async function seed() {
   console.log("Starting database seed...")
@@ -13,16 +7,16 @@ export async function seed() {
   try {
     console.log("Clearing existing data...")
 
-    await db.delete(usersTable)
-    await db.delete(presetsTable)
-    await db.delete(oscillatorsTable)
-    await db.delete(tagsTable)
-    await db.delete(presetsToTagsTable)
+    await db.delete(users)
+    await db.delete(presets)
+    await db.delete(oscillators)
+    await db.delete(tags)
+    await db.delete(presetsToTags)
 
     console.log("Creating users...")
 
     const [envelopeEmperor] = await db
-      .insert(usersTable)
+      .insert(users)
       .values({
         username: "Envelope Emperor",
         email: "adsr.overlord@sustainmail.io",
@@ -30,7 +24,7 @@ export async function seed() {
       .returning()
 
     const [thePatchCableProphet] = await db
-      .insert(usersTable)
+      .insert(users)
       .values({
         username: "The Patch Cable Prophet",
         email: "patchmeinatdawn@modularmail.net",
@@ -38,7 +32,7 @@ export async function seed() {
       .returning()
 
     const [polyphonicSasquatch] = await db
-      .insert(usersTable)
+      .insert(users)
       .values({
         username: "Polyphonic Sasquatch",
         email: "widepadenergy@lushpads.com",
@@ -48,7 +42,7 @@ export async function seed() {
     console.log("Creating presets...")
 
     const [cloudConveyor, subwooferKarate, laserFruitSnack] = await db
-      .insert(presetsTable)
+      .insert(presets)
       .values([
         { name: "Cloud Conveyor", userId: envelopeEmperor.id },
         { name: "Subwoofer Karate", userId: envelopeEmperor.id },
@@ -57,7 +51,7 @@ export async function seed() {
       .returning()
 
     const [graveyardFogMachine, quantumCoffeeShop, tinyDiscoPebble] = await db
-      .insert(presetsTable)
+      .insert(presets)
       .values([
         { name: "Graveyard Fog Machine", userId: thePatchCableProphet.id },
         { name: "Quantum Coffee Shop", userId: thePatchCableProphet.id },
@@ -71,7 +65,7 @@ export async function seed() {
       pastelStardust,
       chainsawCompliment,
     ] = await db
-      .insert(presetsTable)
+      .insert(presets)
       .values([
         { name: "Slow-Motion Nebula", userId: polyphonicSasquatch.id },
         { name: "Vintage Thunderpants", userId: polyphonicSasquatch.id },
@@ -83,7 +77,7 @@ export async function seed() {
     console.log("Creating oscillators...")
 
     await db
-      .insert(oscillatorsTable)
+      .insert(oscillators)
       .values(
         [
           cloudConveyor,
@@ -153,7 +147,7 @@ export async function seed() {
       simple,
       complex,
     ] = await db
-      .insert(tagsTable)
+      .insert(tags)
       .values(
         [
           "Arp",
@@ -178,7 +172,7 @@ export async function seed() {
 
     console.log("Creating presets to tags...")
 
-    await db.insert(presetsToTagsTable).values([
+    await db.insert(presetsToTags).values([
       {
         presetId: cloudConveyor.id,
         tagId: dreamy.id,
@@ -264,8 +258,71 @@ export async function seed() {
         tagId: lead.id,
       },
     ])
+
+    console.log("\nTesting relational queries...")
+
+    // Query user with all their presets
+    const userWithPresets = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.email, "adsr.overlord@sustainmail.io"),
+      with: {
+        presets: {
+          with: {
+            oscillators: true,
+            tags: {
+              with: {
+                tag: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    // Query presets with their tags and oscillators
+    const presetsWithTags = await db.query.presets.findMany({
+      with: {
+        user: true,
+        tags: {
+          with: {
+            tag: true,
+          },
+        },
+        oscillators: true,
+      },
+    })
+
+    // Query tags with their presets
+    const tagsWithPresets = await db.query.tags.findMany({
+      columns: {
+        name: true,
+      },
+      with: {
+        presets: {
+          with: {
+            preset: {
+              with: {
+                oscillators: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    console.log("Database seeded successfully!")
+    console.log("\nSeed Summary:")
+    console.log("- 3 demo users created")
+    console.log(
+      `- Demo user has ${userWithPresets?.presets?.length || 0} presets`
+    )
+    console.log(`- ${presetsWithTags.length} presets created`)
+    console.log(`- ${tagsWithPresets.length} tags created`)
+    console.log(
+      "- Tags are admin defined and only added or removed per preset by the user"
+    )
   } catch (error) {
-    console.error(error)
+    console.error("Seed failed:", error)
+    throw error
   }
 }
 
