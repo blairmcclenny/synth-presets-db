@@ -1,7 +1,7 @@
-import db from "./connection"
-import { users, presets, oscillators, tags, presetsToTags } from "./schema"
+import db from "./connection.ts"
+import { users, presets, oscillators, tags, presetsToTags } from "./schema.ts"
 
-export async function seed() {
+async function seed() {
   console.log("Starting database seed...")
 
   try {
@@ -326,4 +326,13 @@ export async function seed() {
   }
 }
 
-seed()
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error)
+      process.exit(1)
+    })
+}
+
+export default seed
