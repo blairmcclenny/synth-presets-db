@@ -1,6 +1,22 @@
-import "dotenv/config"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
 import * as schema from "./schema.ts"
-import { drizzle } from "drizzle-orm/neon-http"
+import { env, isProd } from "../../env.ts"
+import { remember } from "@epic-web/remember"
 
-export const db = drizzle(process.env.DATABASE_URL!, { schema })
+const createPool = () => {
+  return new Pool({
+    connectionString: env.DATABASE_URL,
+  })
+}
+
+let client
+
+if (isProd()) {
+  client = createPool()
+} else {
+  client = remember("dbPool", () => createPool())
+}
+
+export const db = drizzle({ client, schema })
 export default db
