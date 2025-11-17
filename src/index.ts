@@ -1,7 +1,7 @@
-import "dotenv/config"
+import { env } from "../env.ts"
 import app from "./server.ts"
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`)
-  console.log(`Environment: ${process.env.APP_STAGE}`)
+app.listen(env.PORT, () => {
+  console.log(`Server running on port ${env.PORT}`)
+  console.log(`Environment: ${env.APP_STAGE}`)
 })
